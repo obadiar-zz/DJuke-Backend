@@ -1,11 +1,11 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const router = express.Router();
-var spotify = require('./utils/SpotifyUtils.js')
 
 var generic = spotify.SpotifyUserInitialization;
 var confirmExpectedPlaylistPlaying = spotify.confirmExpectedPlaylistPlaying;
 var addTrackToPlaylist = spotify.addTrackToPlaylist;
+var play = spotify.playSong;
 
 router.get("/registerHostSpotify", function(req, res){
   console.log("Receieved request.");

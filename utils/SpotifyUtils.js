@@ -258,6 +258,12 @@ function SpotifyUserInitialization(client_token, res){
 }
 
 function confirmExpectedPlaylistPlaying(client_token, expected_uri, res){
+  request.post(authOptions, function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+
+      // use the access token to access the Spotify Web API
+      var token = body.access_token;
+      console.log(token);
       var options = {
         url: 'https://api.spotify.com/v1/me/player',
         headers: {
@@ -267,7 +273,9 @@ function confirmExpectedPlaylistPlaying(client_token, expected_uri, res){
       };
       request.get(options, function(error, response, body) {
         res.json({confirm_status: body.context.uri === expected_uri});
-      })
+      });
+    }
+  });
 }
 
 module.exports = {
