@@ -30,7 +30,7 @@ function pauseSong(client_token) {
   });
 }
 
-function playSong(client_token, res) {
+function playSong(client_token) {
   var options = {
     url: 'https://api.spotify.com/v1/me/player/play',
     headers: {
@@ -151,7 +151,26 @@ function addTrackToPlaylist(userID, playlistID, client_token, songURI) {
     }
   };
   request.post(options, function (error, response, body) {
-    console.log("Song added to playlist");
+    var options = {
+      url: 'https://api.spotify.com/v1/me/player/next',
+      headers: {
+        Authorization: client_token
+      },
+      json: true
+    };
+    request.post(options, function (error, response, body) {
+      var options = {
+        url: 'https://api.spotify.com/v1/me/player/play',
+        headers: {
+          Authorization: client_token
+        },
+        json: true
+      };
+      request.put(options, function (error, response, body) {
+        console.log("Song playing");
+        //res.send("Success, song playing!");
+      });
+    });
   });
 }
 
