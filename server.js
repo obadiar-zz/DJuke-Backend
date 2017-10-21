@@ -6,9 +6,10 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 const SpotifyUtils = require('./utils/SpotifyUtils')
 const routes = require('./backend/routes');
-const Queue = require('./backend/queue')
+const Queue = require('./backend/queue');
+const spotify = require('./backend/spotifyRoutes');
 
-const SPOTIFY_TOKEN = "Bearer BQCwDi-HByTOKhBhRjXX0Qh3s6sfOaWIyvz4vkcDDZj-tn9qtbqRq3BtK78zckDFZ_XrrQ4Ct9yKT2ONU3jEJRkWAQuTVwp6tGPdGQe1KLW0vrIAsn_j2Y5VdxBa1Q4tp3eCnk8sCa8yIv6lCaF-BdnJc6AFxKj63xLckPTmN_G5ANL8vbJ4aq7HnVGBUOpNe24hFpVMM6bffEYZlkWVImTcmKeoudpAuqi9I3yPghpgRQv4r7anKPtV60tv_0VUuWM6Sr8_WIFVtecUsvCFpEJ2uuKGOpFD_taeYyUG3t1LU0zDaTY3xqfeleHBWcxSSw"
+const SPOTIFY_TOKEN = "Bearer BQCX7KV4Ex2dK2APNpNl0VT51J_uCNaJE7AbOjy-9j6uzF1egW_MMKIN9MTQKHrOZeISVynm7mCyNw7LbCNVmYYZXvFzsIAEVo3FDD5I3XlUG-BDvYsPbzLk9_s2kBWyY4jGJ5dNAi5GC08SLnCPjsVjGUFj2k1TIVf_nPplmDIPmzio9O_gWHxfc-2wVJdD2xgMTwOWpgjV0gQJ8pI2fhbQted0A-rvHmoXOcio4k8uibSm1NQlc9ScDDep1_ADJHJVjZ63lhwrkpFMcGbwdQPRt4WAJG89dL50JBatebcLwaOmCPqGUJRpULNhQsmoQj4Red0"
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -16,9 +17,16 @@ app.get('/', (request, response) => {
     response.sendFile(__dirname + '/public/index.html'); // For React/Redux
 });
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 var SongQueue = new Queue();
 
 app.use('/', routes);
+app.use('/', spotify);
 
 io.on('connection', function (socket) {
     var ip;
