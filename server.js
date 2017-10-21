@@ -17,8 +17,13 @@ var firstSong = true;
 
 spotifyEventListener.on("nextSong_Spotify", function(data) {
     // process data when someEvent occurs
+
     console.log("Broadcast new song added");
-    io.emit('NEXT_SONG', data);
+    console.log(data);
+    g_socket.emit('QUEUE_UPDATED', {
+      currentlyPlaying: data.currentlyPlaying,
+      list: data.list
+    });
 });
 
 spotifyEventListener.on("spotify_done", function(data) {
@@ -27,7 +32,7 @@ spotifyEventListener.on("spotify_done", function(data) {
     firstSong = true;
 });
 
-const SPOTIFY_TOKEN = "Bearer BQDa0THhgMHSpJy0-jecIMSMHOp55qlYCgI7-Ng2_t5yUqV6j0XaR5Kgf4PTrRo91qs_WCvcdL7dAiegC-yC7mkCssbtysm7-IsbZMwZNKrI6e7fdNXSNCe9NcS6s7MuWXxynhzfDV9KIP-m3UrI-tjYicafAVOPjJWrhD98Dng1edsZEwsDWqx56dI41HcLEK7OZ-iEELEG-pLREovmYD6TVnX8IHm1nj2wY2R83CdrKoFMrpAlNnMv-tt8U8IYnmlE1u2Ux-wXJwSKbrl2YJj0miuBrQ4amxN5rDvjylJj5yzrwHn51IYk2BDsZN3dtag_70I"
+const SPOTIFY_TOKEN = "Bearer BQA1wE9P9gj02wklXU7_GWOxJ9StpJ8uXbQ1-tySC5FT-E2Hzum4ZeE6j5OTkr-wrnGXFYgEYK--PRdzH5SJQsmpNLx_uX-UZCkCS16ig6XcAP9U9rv2McJsCo_nV1ro_Zl6QUV7ZQg7w8ZGT8k987WlChenYTkpIgrVx-zbweTqFCve7rWwPscFGdduHqowrQhh01RJT2co0-y_4uylyeZ2FCGMI-d3OKj7KkzNaWDBwo4feLQlhJI7ZQLB63KjI6ARBniqLmRrMqkZ1JAFJcNet4RSjscopX13aBZxQ3f2Mn5jiTBp0PoCI-q6Z0ZW0I33TF0"
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -49,14 +54,13 @@ app.use('/', spotify);
 
 io.on('connection', function (socket) {
 
-    g_socket = socket;
+    g_socket = io;
 
-    var ip;
+    var id;
     socket.emit('QUEUE_UPDATED', SongQueue);
 
-    socket.on('CONNECT', function (data) {
-        console.log(data.ip, 'connected!');
-        ip = data.ip;
+    socket.on('CONNECT', function () {
+        id = socket.id;
         socket.emit('SUCCESS', 'CONNECTED');
     });
 
@@ -107,14 +111,20 @@ io.on('connection', function (socket) {
     })
 
     socket.on('UPVOTE_SONG', function (data) {
+      var currentlyPlaying = JSON.parse(localStorage.getItem("currentlyPlaying"));
+
       SongQueue.list = JSON.parse(localStorage.getItem("SongQueue")).list;
-        if (SongQueue.toggleUpvote(ip, data.id)) {
+        if (SongQueue.toggleUpvote(id, data.id)) {
             socket.emit('SUCCESS', 'SONG_UPVOTE_ADDED')
         } else {
             socket.emit('SUCCESS', 'SONG_UPVOTE_REMOVED')
         }
         SongQueue.sort();
         localStorage.setItem("SongQueue", JSON.stringify(SongQueue));
+        // io.emit('QUEUE_UPDATED', {
+        //   list: SongQueue,
+        //   currentlyPlaying: currentlyPlaying
+        // });
         io.emit('QUEUE_UPDATED', SongQueue);
         console.log(SongQueue);
     })

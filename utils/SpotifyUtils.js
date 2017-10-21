@@ -145,7 +145,7 @@ function createPlaylist(client_token) {
 
 function addTrackToPlaylist(userID, playlistID, client_token, songURI) {
   var user_id = userID;
-  var playlist_id = playlistID;
+  var playlist_id = playlistID
   var playlist_uri = "spotify:user:"+userID+":playlist:"+playlistID;
   console.log("FOUND!");
   var options = {
@@ -170,37 +170,73 @@ function addTrackToPlaylist(userID, playlistID, client_token, songURI) {
       }
     };
     request.delete(options, function (error, response, body) {
+
+  var options = {
+    url: 'https://api.spotify.com/v1/users/' + userID + '/playlists/' + playlistID + '/tracks?uris=' + songURI,
+    headers: {
+      Authorization: client_token
+    }
+  };
+  request.post(options, function (error, response, body) {
+    var options = {
+      url: 'https://api.spotify.com/v1/me/player/next',
+      headers: {
+        Authorization: client_token
+      },
+      json: true
+    };
+    request.post(options, function (error, response, body) {
       var options = {
-        url: 'https://api.spotify.com/v1/users/' + userID + '/playlists/' + playlistID + '/tracks?uris=' + songURI,
+        url: 'https://api.spotify.com/v1/me/player/play',
         headers: {
           Authorization: client_token
-        }
+        },
+        json: true
       };
-      request.post(options, function (error, response, body) {
-        var options = {
-          url: 'https://api.spotify.com/v1/me/player/next',
-          headers: {
-            Authorization: client_token
-          },
-          json: true
-        };
-        request.post(options, function (error, response, body) {
-          var options = {
-            url: 'https://api.spotify.com/v1/me/player/play',
-            headers: {
-              Authorization: client_token
-            },
-            json: true
-          };
-          request.put(options, function (error, response, body) {
-            console.log("Song playing");
-            //res.send("Success, song playing!");
-          });
-        });
+      request.put(options, function (error, response, body) {
+        console.log("Song playing");
+        //res.send("Success, song playing!");
       });
+    });
+  });
+  });
+    });
+}
 
-    })
-  })
+
+
+function addTrackToPlaylistFIRST(userID, playlistID, client_token, songURI) {
+  var user_id = userID;
+  var playlist_id = playlistID
+  var playlist_uri = "spotify:user:"+userID+":playlist:"+playlistID;
+  var options = {
+    url: 'https://api.spotify.com/v1/users/' + userID + '/playlists/' + playlistID + '/tracks?uris=' + songURI,
+    headers: {
+      Authorization: client_token
+    }
+  };
+  request.post(options, function (error, response, body) {
+    var options = {
+      url: 'https://api.spotify.com/v1/me/player/next',
+      headers: {
+        Authorization: client_token
+      },
+      json: true
+    };
+    request.post(options, function (error, response, body) {
+      var options = {
+        url: 'https://api.spotify.com/v1/me/player/play',
+        headers: {
+          Authorization: client_token
+        },
+        json: true
+      };
+      request.put(options, function (error, response, body) {
+        console.log("Song playing");
+        //res.send("Success, song playing!");
+      });
+    });
+      });
 }
 
 function SpotifyUserInitialization(client_token, res) {
@@ -316,23 +352,8 @@ function confirmExpectedPlaylistPlaying(client_token, user_id, playlist_id, expe
   };
   request.get(options, function (error, response, body) {
     if(body.context.uri === expected_uri){
-      var options = {
-        url: 'https://api.spotify.com/v1/users/' + user_id + '/playlists/' + playlist_id + '/tracks',
-        headers: {
-          Authorization: client_token
-        },
-        json: true,
-        body: {
-          tracks: [{
-            "position": 0,
-            "uri": default_song_uri
-          }]
-        }
-      };
-      request.delete(options, function (error, response, body) {
         res.json({ confirm_status:  true});
-      });
-    } else{
+      } else{
       res.json({ confirm_status:  false});
     }
 
@@ -381,5 +402,6 @@ module.exports = {
   SpotifyUserInitialization,
   confirmExpectedPlaylistPlaying,
   getSongInfo,
-  msToMinutes
+  msToMinutes,
+  addTrackToPlaylistFIRST
 }
