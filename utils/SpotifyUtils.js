@@ -144,34 +144,63 @@ function createPlaylist(client_token) {
 }
 
 function addTrackToPlaylist(userID, playlistID, client_token, songURI) {
+  var user_id = userID;
+  var playlist_id = playlistID;
+  var playlist_uri = "spotify:user:"+userID+":playlist:"+playlistID;
+  console.log("FOUND!");
   var options = {
-    url: 'https://api.spotify.com/v1/users/' + userID + '/playlists/' + playlistID + '/tracks?uris=' + songURI,
+    url: 'https://api.spotify.com/v1/users/' + user_id + '/playlists/' + playlist_id + '/tracks',
     headers: {
       Authorization: client_token
     }
   };
-  request.post(options, function (error, response, body) {
+  request.get(options, function (error, response, body) {
+    var toDelete = JSON.parse(body).items.map((x, i) => x.track.uri);
     var options = {
-      url: 'https://api.spotify.com/v1/me/player/next',
+      url: 'https://api.spotify.com/v1/users/' + user_id + '/playlists/' + playlist_id + '/tracks',
       headers: {
         Authorization: client_token
       },
-      json: true
+      json: true,
+      body: {
+        tracks: toDelete.map((x, i) => ({
+          "position": i,
+          "uri": x
+        }))
+      }
     };
-    request.post(options, function (error, response, body) {
+    request.delete(options, function (error, response, body) {
       var options = {
-        url: 'https://api.spotify.com/v1/me/player/play',
+        url: 'https://api.spotify.com/v1/users/' + userID + '/playlists/' + playlistID + '/tracks?uris=' + songURI,
         headers: {
           Authorization: client_token
-        },
-        json: true
+        }
       };
-      request.put(options, function (error, response, body) {
-        console.log("Song playing");
-        //res.send("Success, song playing!");
+      request.post(options, function (error, response, body) {
+        var options = {
+          url: 'https://api.spotify.com/v1/me/player/next',
+          headers: {
+            Authorization: client_token
+          },
+          json: true
+        };
+        request.post(options, function (error, response, body) {
+          var options = {
+            url: 'https://api.spotify.com/v1/me/player/play',
+            headers: {
+              Authorization: client_token
+            },
+            json: true
+          };
+          request.put(options, function (error, response, body) {
+            console.log("Song playing");
+            //res.send("Success, song playing!");
+          });
+        });
       });
-    });
-  });
+
+    })
+  })
 }
 
 function SpotifyUserInitialization(client_token, res) {
@@ -311,6 +340,8 @@ function confirmExpectedPlaylistPlaying(client_token, user_id, playlist_id, expe
 }
 
 function getSongInfo(client_token, song_id, cb) {
+  console.log(client_token);
+  console.log("FFUUUCCCCCJKKKK");
   var options = {
     url: "https://api.spotify.com/v1/tracks/" + song_id,
     headers: {

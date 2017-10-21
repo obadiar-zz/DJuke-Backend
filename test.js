@@ -15,6 +15,7 @@ if (localServer) {
 		id: process.argv[3],
 		ip: ip.address(),
 		amount: process.argv[4] || 0,
+		type: "spotify"
 	})
 
 	socket.on("QUEUE_UPDATED", function (data) {

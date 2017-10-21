@@ -5,13 +5,15 @@ const PORT = process.env.PORT || 8228;
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 const SpotifyUtils = require('./utils/SpotifyUtils')
+const SCUtils = require('./utils/SCUtils')
 const routes = require('./backend/routes');
 const Queue = require('./backend/queue');
 const spotify = require('./backend/spotifyRoutes').router;
+const spotifyFirstSong = require('./backend/spotifyRoutes').firstSong;
 const spotifyEventListener = require('./backend/spotifyRoutes').eventListener;
 var localStorage = require('localStorage');
 
-var g_socket;
+var firstSong = true;
 
 spotifyEventListener.on("nextSong_Spotify", function(data) {
     // process data when someEvent occurs
@@ -19,7 +21,13 @@ spotifyEventListener.on("nextSong_Spotify", function(data) {
     io.emit('NEXT_SONG', data);
 });
 
-const SPOTIFY_TOKEN = "Bearer BQBQK-ehggqY5awlYzt0af3Wv7h9TtIUU4Hb9oSLDdIQYH-MJRZuDHnce7ZoiAzyOJKDAw-eXAYaSlmVyAKcT2FYcLnctSe7SaSjEQwIPVrWaYN-EN6rqFffqQbZEo85w1Fh4T8HZlw472AwGv63UtqDFdxKouN6Chq0t3t7fwxEmCyyJLNluZTd2gwpzKF8iJgLPw9BIIUJQ0eSMRfKWxtR61l_F07YsIvppZY0Nfg_btGOkK-bBcpRF81yeIlATbyirAz49oMWEiPZ--BBjr796IrK4VVywqE41zSAwU2MAySQ9_DaVZgihB8btjJgE4A9dOs"
+spotifyEventListener.on("spotify_done", function(data) {
+  console.log("EHEHEHHEHEHEHEH");
+    // process data when someEvent occurs
+    firstSong = true;
+});
+
+const SPOTIFY_TOKEN = "Bearer BQDa0THhgMHSpJy0-jecIMSMHOp55qlYCgI7-Ng2_t5yUqV6j0XaR5Kgf4PTrRo91qs_WCvcdL7dAiegC-yC7mkCssbtysm7-IsbZMwZNKrI6e7fdNXSNCe9NcS6s7MuWXxynhzfDV9KIP-m3UrI-tjYicafAVOPjJWrhD98Dng1edsZEwsDWqx56dI41HcLEK7OZ-iEELEG-pLREovmYD6TVnX8IHm1nj2wY2R83CdrKoFMrpAlNnMv-tt8U8IYnmlE1u2Ux-wXJwSKbrl2YJj0miuBrQ4amxN5rDvjylJj5yzrwHn51IYk2BDsZN3dtag_70I"
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -53,15 +61,18 @@ io.on('connection', function (socket) {
     });
 
     socket.on('ADD_SONG', function (data) {
+      console.log("SONG ADDED");
+      SongQueue.list = JSON.parse(localStorage.getItem("SongQueue")).list;
         function callback(result) {
             var newSong = {
                 title: result.title,
                 artist: result.artist,
                 duration: SpotifyUtils.msToMinutes(result.duration),
+                durationS: result.duration / 1000,
                 id: result.id,
                 upvotes: {},
-                payment: 0,
-                requestor_ip: data.ip,
+                payment: data.payment || 0,
+                requestor_id: socket.id,
                 thumbnail: result.thumbnail,
                 time: String(new Date())
             }
@@ -73,12 +84,20 @@ io.on('connection', function (socket) {
             SongQueue.sort();
             localStorage.setItem("SongQueue", JSON.stringify(SongQueue));
             io.emit('QUEUE_UPDATED', SongQueue);
-            console.log(SongQueue);
+            if(firstSong){
+              spotifyFirstSong()
+              firstSong = false;
+            }
         }
-        SpotifyUtils.getSongInfo(SPOTIFY_TOKEN, data.id, callback)
+        if (data.type === 'spotify') {
+            SpotifyUtils.getSongInfo(SPOTIFY_TOKEN, data.id, callback)
+        } else {
+            SCUtils.getSongInfo(data.id, callback)
+        }
     })
 
     socket.on('REMOVE_SONG', function (data) {
+      SongQueue.list = JSON.parse(localStorage.getItem("SongQueue")).list;
         SongQueue.removeSong(data.id);
         socket.emit('SUCCESS', 'SONG_REMOVED')
         SongQueue.sort();
@@ -88,6 +107,7 @@ io.on('connection', function (socket) {
     })
 
     socket.on('UPVOTE_SONG', function (data) {
+      SongQueue.list = JSON.parse(localStorage.getItem("SongQueue")).list;
         if (SongQueue.toggleUpvote(ip, data.id)) {
             socket.emit('SUCCESS', 'SONG_UPVOTE_ADDED')
         } else {
@@ -100,6 +120,7 @@ io.on('connection', function (socket) {
     })
 
     socket.on('PAY_SONG', function (data) {
+      SongQueue.list = JSON.parse(localStorage.getItem("SongQueue")).list;
         SongQueue.addPayment(data.id, data.amount);
         socket.emit('SUCCESS', 'SONG_PAYMENT_UPDATED');
         SongQueue.sort();
