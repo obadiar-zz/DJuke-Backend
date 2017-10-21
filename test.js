@@ -61,19 +61,19 @@ if (localServer) {
 }
 
 // } else{
-//   axios.get("https://rocky-brook-68243.herokuapp.com/discover")
-//       .then(response => {
-//           localServer = response.data;
-//           var connectionAddress = 'http://' + localServer + ':' + PORT;
-//           var socket = io(connectionAddress);
-//           socket.emit('IP_CONNECTED', {
-//               ip: ip.address()
-//           })
-//
-//           socket.emit('ADD_SONG', {
-//               song_id: 1,
-//               ip: ip.address()
-//           })
-//       })
-//       .catch(error => console.log('A problem has occured..'));
-// }
+  // axios.get("https://rocky-brook-68243.herokuapp.com/discover")
+  //     .then(response => {
+  //         localServer = response.data;
+  //         var connectionAddress = 'http://' + localServer + ':' + PORT;
+  //         var socket = io(connectionAddress);
+  //         socket.emit('IP_CONNECTED', {
+  //             ip: ip.address()
+  //         })
+	//
+  //         socket.emit('ADD_SONG', {
+  //             song_id: 1,
+  //             ip: ip.address()
+  //         })
+  //     })
+  //     .catch(error => console.log('A problem has occured..'));
+}
