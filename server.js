@@ -7,9 +7,19 @@ var io = require('socket.io')(http);
 const SpotifyUtils = require('./utils/SpotifyUtils')
 const routes = require('./backend/routes');
 const Queue = require('./backend/queue');
-const spotify = require('./backend/spotifyRoutes');
+const spotify = require('./backend/spotifyRoutes').router;
+const spotifyEventListener = require('./backend/spotifyRoutes').eventListener;
+var localStorage = require('localStorage');
 
-const SPOTIFY_TOKEN = "Bearer BQCX7KV4Ex2dK2APNpNl0VT51J_uCNaJE7AbOjy-9j6uzF1egW_MMKIN9MTQKHrOZeISVynm7mCyNw7LbCNVmYYZXvFzsIAEVo3FDD5I3XlUG-BDvYsPbzLk9_s2kBWyY4jGJ5dNAi5GC08SLnCPjsVjGUFj2k1TIVf_nPplmDIPmzio9O_gWHxfc-2wVJdD2xgMTwOWpgjV0gQJ8pI2fhbQted0A-rvHmoXOcio4k8uibSm1NQlc9ScDDep1_ADJHJVjZ63lhwrkpFMcGbwdQPRt4WAJG89dL50JBatebcLwaOmCPqGUJRpULNhQsmoQj4Red0"
+var g_socket;
+
+spotifyEventListener.on("nextSong_Spotify", function(data) {
+    // process data when someEvent occurs
+    console.log("Broadcast new song added");
+    io.emit('NEXT_SONG', data);
+});
+
+const SPOTIFY_TOKEN = "Bearer BQBQK-ehggqY5awlYzt0af3Wv7h9TtIUU4Hb9oSLDdIQYH-MJRZuDHnce7ZoiAzyOJKDAw-eXAYaSlmVyAKcT2FYcLnctSe7SaSjEQwIPVrWaYN-EN6rqFffqQbZEo85w1Fh4T8HZlw472AwGv63UtqDFdxKouN6Chq0t3t7fwxEmCyyJLNluZTd2gwpzKF8iJgLPw9BIIUJQ0eSMRfKWxtR61l_F07YsIvppZY0Nfg_btGOkK-bBcpRF81yeIlATbyirAz49oMWEiPZ--BBjr796IrK4VVywqE41zSAwU2MAySQ9_DaVZgihB8btjJgE4A9dOs"
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -24,11 +34,15 @@ app.use(function(req, res, next) {
 });
 
 var SongQueue = new Queue();
+localStorage.setItem("SongQueue", JSON.stringify(SongQueue));
 
 app.use('/', routes);
 app.use('/', spotify);
 
 io.on('connection', function (socket) {
+
+    g_socket = socket;
+
     var ip;
     socket.emit('QUEUE_UPDATED', SongQueue);
 
@@ -57,6 +71,7 @@ io.on('connection', function (socket) {
                 socket.emit('SUCCESS', 'SONG_ADDED');
             }
             SongQueue.sort();
+            localStorage.setItem("SongQueue", JSON.stringify(SongQueue));
             io.emit('QUEUE_UPDATED', SongQueue);
             console.log(SongQueue);
         }
@@ -67,6 +82,7 @@ io.on('connection', function (socket) {
         SongQueue.removeSong(data.id);
         socket.emit('SUCCESS', 'SONG_REMOVED')
         SongQueue.sort();
+        localStorage.setItem("SongQueue", JSON.stringify(SongQueue));
         io.emit('QUEUE_UPDATED', SongQueue);
         console.log(SongQueue);
     })
@@ -78,6 +94,7 @@ io.on('connection', function (socket) {
             socket.emit('SUCCESS', 'SONG_UPVOTE_REMOVED')
         }
         SongQueue.sort();
+        localStorage.setItem("SongQueue", JSON.stringify(SongQueue));
         io.emit('QUEUE_UPDATED', SongQueue);
         console.log(SongQueue);
     })
@@ -86,6 +103,7 @@ io.on('connection', function (socket) {
         SongQueue.addPayment(data.id, data.amount);
         socket.emit('SUCCESS', 'SONG_PAYMENT_UPDATED');
         SongQueue.sort();
+        localStorage.setItem("SongQueue", JSON.stringify(SongQueue));
         io.emit('QUEUE_UPDATED', SongQueue);
         console.log(SongQueue);
     })
