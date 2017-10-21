@@ -1,13 +1,18 @@
 import React from 'react';
-import { render } from 'react-dom';
-import { configureStore, history } from './store/configureStore';
-import Root from './containers/Root';
+import ReactDOM from 'react-dom';
+import { createStore } from 'redux';
+import { Provider } from 'react-redux';
+import App from './components/App';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import rootReducer from './reducers/index';
 
-import './assets/stylesheets/base.scss';
+const store = createStore(rootReducer);
 
-const store = configureStore();
-
-render(
-    <Root store={store} history={history} />,
-    document.getElementById('root')
+ReactDOM.render(
+  <Provider store={store}>
+    <MuiThemeProvider>
+      <App />
+    </MuiThemeProvider>
+  </Provider>,
+  document.getElementById('root')
 );

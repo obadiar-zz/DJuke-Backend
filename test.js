@@ -13,7 +13,6 @@ if (localServer) {
 
 	socket.emit(process.argv[2], {
 		id: process.argv[3],
-		ip: ip.address(),
 		amount: process.argv[4] || 0,
 	})
 
@@ -26,7 +25,7 @@ if (localServer) {
 	socket.on("ERROR", function (data) {
 		switch (data) {
 			case "SONG_ALREADY_IN_QUEUE":
-				console.log("Sorry song is already in the queue");
+				console.log("This song is already in the queue.");
 				break;
 			default:
 				console.log(data);
