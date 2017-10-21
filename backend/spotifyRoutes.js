@@ -39,42 +39,43 @@ router.get("/continueHostSpotify", function(req, res){
   confirmExpectedPlaylistPlaying(token, user_id, playlist_id, playlist_uri,res);
 })
 
-router.get("/addToPlaylist", function(req, res){
-  // var song_uri = req.query.song_uri;
-  // var user_id = Object.keys(spotifyData)[0];
-  // var playlist_id = spotifyData[user_id].playlist_id;
-  // var token = spotifyData[user_id].token;
-  // var song_uri = song_uri;
-  // var res = res;
-  // addNextAndPlay(user_id, playlist_id, token, song_uri)
-  setTimeout(function(){
-    var user_id = Object.keys(spotifyData)[0];
-    var playlist_id = spotifyData[user_id].playlist_id;
-    var token = spotifyData[user_id].token;
-    addNextAndPlay(user_id, playlist_id, token, res);
-  },5000)
-})
+function firstSong(){
+  console.log("First song called.");
+  var user_id = Object.keys(spotifyData)[0];
+  var playlist_id = spotifyData[user_id].playlist_id;
+  var token = spotifyData[user_id].token;
+  addNextAndPlay(user_id, playlist_id, token, true);
+}
 
-
-function addNextAndPlay(user_id, playlist_id, token){
+function addNextAndPlay(user_id, playlist_id, token, first){
   var queue = JSON.parse(localStorage.getItem("SongQueue")).list;
-  var nextSong = queue.pop();
+  if(!first){
+    queue.pop();
+  }
+  var nextSong = queue[queue.length-1]
   var song_uri = "spotify:track:"+nextSong.id;
+  console.log(queue.length);
 
   eventListener.emit("nextSong_Spotify", queue);
   localStorage.setItem("SongQueue", JSON.stringify({list: queue}));
 
+  if(queue.length >= 2){
+    setTimeout(function(){
+      var user_id = Object.keys(spotifyData)[0];
+      var playlist_id = spotifyData[user_id].playlist_id;
+      var token = spotifyData[user_id].token;
+      addNextAndPlay(user_id, playlist_id, token, false);
+    },(1)*1000)
+  } else{
+        eventListener.emit("spotify_done", false);
+  }
+
   addTrack(user_id, playlist_id, token, song_uri)
 
-  setTimeout(function(){
-    var user_id = Object.keys(spotifyData)[0];
-    var playlist_id = spotifyData[user_id].playlist_id;
-    var token = spotifyData[user_id].token;
-    addNextAndPlay(user_id, playlist_id, token);
-  },5000)
 }
 
 module.exports = {
   router,
-  eventListener
+  eventListener,
+  firstSong
 };
