@@ -21,15 +21,15 @@ SongQueue.prototype.removeSong = function (removeId) {
 	this.list = this.list.filter(song => song.id !== removeId)
 }
 
-SongQueue.prototype.toggleUpvote = function (clientIP, upvoteId) {
+SongQueue.prototype.toggleUpvote = function (clientID, upvoteId) {
 	for (var i = 0; i < this.list.length; i++) {
 		var song = this.list[i];
 		if (song.id === upvoteId) {
-			if (song.upvotes[clientIP]) {
-				delete song.upvotes[clientIP];
+			if (song.upvotes[clientID]) {
+				delete song.upvotes[clientID];
 				return false;
 			} else {
-				song.upvotes[clientIP] = 1;
+				song.upvotes[clientID] = 1;
 				return true;
 			}
 		}
